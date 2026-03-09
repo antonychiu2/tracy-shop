@@ -15,11 +15,43 @@ Tracy Shop is a demo e-commerce application that sells Tracy merchandise. This p
 - **Framework**: React
 - **State Management**: React Context API / Redux (TBD)
 - **Styling**: CSS Modules / Tailwind CSS / Styled Components (TBD)
-- **Local Storage**: Browser LocalStorage API
+- **Backend/Database**: Basic Node.js/Express API with MongoDB or PostgreSQL (TBD)
 - **Routing**: React Router
 - **Build Tool**: Vite / Create React App (TBD)
 
 ## Feature Specifications
+
+### 0. Homescreen & Navigation
+
+**Design:**
+- Modern, Amazon-like aesthetic with clean, minimal design
+- Full-width header with:
+  - Logo/branding on left
+  - Prominent search bar in center
+  - Account/Cart icons on right
+  - Secondary navigation menu below (Categories, Deals, etc.)
+
+**Hero Section:**
+- Automatic carousel/slider showcasing on-sale products
+- Auto-rotates every 5-7 seconds
+- Manual navigation arrows on left/right
+- Dot indicators for slide position
+- High-quality banner images with product overlays
+- Call-to-action buttons ("Shop Now" for each promotion)
+
+**Category Section:**
+- Grid layout of high-level product categories below hero slider
+- Typically 4-6 categories visible
+- Each category card displays:
+  - Category image/icon
+  - Category name
+  - "Shop Now" link
+- Responsive: 4 columns on desktop, 2 on tablet, 1 on mobile
+
+**Search Functionality:**
+- Real-time search suggestions as user types
+- Search by product name, category, or description
+- Quick access to recently searched items
 
 ### 1. Product Catalog
 - Display Tracy merchandise with images, descriptions, and prices
@@ -62,54 +94,114 @@ Tracy Shop is a demo e-commerce application that sells Tracy merchandise. This p
 
 ### Data Storage Strategy
 
-All data is stored in browser LocalStorage with the following structure:
+Data is persisted using a basic REST API backend with the following database schema:
+
+**Backend Stack:**
+- Node.js/Express server
+- MongoDB or PostgreSQL database
+- JWT for session management
+- API endpoints for all CRUD operations
+
+**Data Models:**
 
 ```javascript
-// User data
+// User Model
 {
-  "users": [
+  "_id": "uuid",
+  "email": "user@example.com",
+  "password": "hashed",
+  "profile": {
+    "firstName": "",
+    "lastName": "",
+    "phone": ""
+  },
+  "addresses": [
     {
       "id": "uuid",
-      "email": "user@example.com",
-      "password": "hashed", // Simple encoding for demo
-      "profile": {
-        "firstName": "",
-        "lastName": "",
-        "phone": ""
-      },
-      "addresses": [],
-      "orders": []
+      "street": "",
+      "city": "",
+      "state": "",
+      "zip": "",
+      "country": "",
+      "isDefault": false
     }
   ],
-  "currentUser": "userId or null"
+  "orders": ["orderId"], // Array of order references
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
 }
 
-// Product catalog (could be hardcoded or in LocalStorage)
+// Product Model
 {
-  "products": [
+  "_id": "uuid",
+  "name": "",
+  "description": "",
+  "price": 0,
+  "salePrice": 0,
+  "isOnSale": false,
+  "images": [
     {
-      "id": "uuid",
-      "name": "",
-      "description": "",
-      "price": 0,
-      "images": [],
-      "category": "",
-      "variants": []
+      "url": "",
+      "alt": ""
     }
-  ]
+  ],
+  "category": "uuid", // Reference to Category
+  "variants": [
+    {
+      "name": "size",
+      "options": ["S", "M", "L", "XL"]
+    }
+  ],
+  "stock": 0,
+  "rating": 0,
+  "reviews": ["reviewId"], // Array of review references
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
 }
 
-// Shopping cart
+// Category Model
 {
-  "cart": {
+  "_id": "uuid",
+  "name": "",
+  "description": "",
+  "image": "",
+  "slug": ""
+}
+
+// Order Model
+{
+  "_id": "uuid",
+  "orderNumber": "TRY-2024-001",
+  "userId": "uuid", // Reference to User
+  "items": [
+    {
+      "productId": "uuid",
+      "quantity": 0,
+      "price": 0,
+      "variant": {}
+    }
+  ],
+  "shippingAddress": {},
+  "subtotal": 0,
+  "tax": 0,
+  "total": 0,
+  "status": "pending", // pending, shipped, delivered, cancelled
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+
+// Client-side cart (LocalStorage)
+{
+  "tracy-shop:cart": {
     "items": [
       {
-        "productId": "",
+        "productId": "uuid",
         "quantity": 0,
         "variant": {}
       }
     ]
-  }
+  },
+  "tracy-shop:currentUser": "userId or null"
 }
 ```
 
@@ -122,11 +214,22 @@ src/
 │   │   ├── Button/
 │   │   ├── Input/
 │   │   ├── Card/
-│   │   └── Modal/
+│   │   ├── Modal/
+│   │   └── Badge/
 │   ├── layout/          # Layout components
 │   │   ├── Header/
+│   │   │   ├── SearchBar/
+│   │   │   ├── NavigationMenu/
+│   │   │   └── CartIcon/
 │   │   ├── Footer/
 │   │   └── Navigation/
+│   ├── home/            # Homescreen components
+│   │   ├── HeroSlider/
+│   │   │   ├── SlideItem/
+│   │   │   ├── SlideControls/
+│   │   │   └── SlideDots/
+│   │   └── CategoryGrid/
+│   │       └── CategoryCard/
 │   ├── products/        # Product-related components
 │   │   ├── ProductCard/
 │   │   ├── ProductList/
@@ -135,7 +238,7 @@ src/
 │   ├── cart/            # Cart components
 │   │   ├── CartItem/
 │   │   ├── CartSummary/
-│   │   └── CartIcon/
+│   │   └── CartPage/
 │   ├── checkout/        # Checkout flow
 │   │   ├── CheckoutForm/
 │   │   ├── ShippingForm/
@@ -151,13 +254,18 @@ src/
 │   ├── CartContext.js
 │   └── ProductContext.js
 ├── hooks/               # Custom React hooks
-│   ├── useLocalStorage.js
 │   ├── useAuth.js
-│   └── useCart.js
+│   ├── useCart.js
+│   ├── useLocalStorage.js
+│   └── useApi.js
+├── api/                 # API client and utilities
+│   ├── client.js        # Axios/Fetch wrapper
+│   ├── endpoints.js     # API endpoint definitions
+│   └── auth.js          # Authentication API calls
 ├── utils/               # Utility functions
-│   ├── storage.js
 │   ├── validation.js
-│   └── formatters.js
+│   ├── formatters.js
+│   └── constants.js
 ├── pages/               # Page components
 │   ├── Home/
 │   ├── Products/
@@ -221,8 +329,21 @@ src/
 
 ### Demo Data
 
-- Include seed data for products (at least 10-15 Tracy merchandise items)
-- Provide mock product images (can use placeholders initially)
+- Product images are ready in the `/assets` folder — use these directly for seeding
+- The following catalog assets are available:
+
+| File | Product |
+|------|---------|
+| `catalog-man-hoodie.jpg` | Men's Tracy Hoodie |
+| `catalog-man-tshirt.jpg` | Men's Tracy T-Shirt |
+| `catalog-woman-hoodie.jpg` | Women's Tracy Hoodie |
+| `catalog-woman-tshirt.jpg` | Women's Tracy T-Shirt |
+| `catalog-sticker-mobb.jpg` | Mobb Sticker Pack |
+| `catalog-sticker-mobbtracy.jpg` | Mobb Tracy Sticker Pack |
+| `catalog-sticker-timemachine.jpg` | Time Machine Sticker |
+| `catalog-tracy-keycaps.jpg` | Tracy Keycaps Set |
+
+- Seed the database with these 8 products across categories (Apparel, Stickers, Accessories)
 - Consider pre-populating a demo account for quick testing
 
 ### Testing Considerations
@@ -244,10 +365,38 @@ src/
 - Export order data
 - Dark mode theme
 
+## Backend API Structure
+
+### Authentication Endpoints
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `POST /api/auth/refresh` - Refresh JWT token
+
+### Product Endpoints
+- `GET /api/products` - Get all products with filters
+- `GET /api/products/:id` - Get single product
+- `GET /api/categories` - Get all categories
+- `GET /api/products/onSale` - Get products on sale (for hero slider)
+
+### User Endpoints
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+- `GET /api/users/addresses` - Get saved addresses
+- `POST /api/users/addresses` - Add new address
+
+### Order Endpoints
+- `POST /api/orders` - Create new order
+- `GET /api/orders` - Get user orders
+- `GET /api/orders/:id` - Get order details
+
+### Search Endpoint
+- `GET /api/search` - Full-text search products
+
 ## Notes
 
-- This is a **demo application** - no real payment processing or user authentication
-- All passwords are stored locally (use simple encoding, not production-grade security)
+- This is a **demo application** - no real payment processing
+- Authentication is simulated (JWT tokens for session management)
 - No actual email confirmations or communications
-- Product inventory is not tracked (items never go out of stock)
-- Focus on UX and frontend functionality over backend simulation
+- Backend provides persistent data storage across sessions
+- Focus on UX and realistic e-commerce flows
