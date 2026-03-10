@@ -11,6 +11,7 @@ import Checkout from './pages/Checkout/Checkout'
 import OrderConfirmation from './pages/OrderConfirmation/OrderConfirmation'
 import Login from './pages/Login/Login'
 import Register from './pages/Register/Register'
+import ForgotPassword from './pages/ForgotPassword/ForgotPassword'
 import Account from './pages/Account/Account'
 import OrderHistory from './pages/Account/OrderHistory'
 import OrderDetail from './pages/Account/OrderDetail'
@@ -33,6 +34,7 @@ function App() {
                 <Route path="/checkout/confirmation" element={<OrderConfirmation />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="/account/orders" element={<OrderHistory />} />
                 <Route path="/account/orders/:id" element={<OrderDetail />} />

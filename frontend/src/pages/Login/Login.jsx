@@ -46,6 +46,11 @@ export default function Login() {
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               required
             />
+            {import.meta.env.VITE_EMAIL_CONNECTOR_READY === 'true' && (
+              <Link to="/forgot-password" className={styles.forgotLink}>
+                Forgot your password?
+              </Link>
+            )}
           </div>
           {error && <p className={styles.error}>{error}</p>}
           <button type="submit" className={styles.submitBtn} disabled={loading}>

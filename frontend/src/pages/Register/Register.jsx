@@ -37,15 +37,13 @@ export default function Register() {
       <div className={styles.card}>
         <h1 className={styles.title}>Create Account</h1>
         <form onSubmit={handleSubmit}>
-          <div className={styles.grid2}>
-            <div className={styles.field}>
-              <label>First Name</label>
-              <input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} required />
-            </div>
-            <div className={styles.field}>
-              <label>Last Name</label>
-              <input value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} required />
-            </div>
+          <div className={styles.field}>
+            <label>First Name</label>
+            <input value={form.firstName} onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))} required />
+          </div>
+          <div className={styles.field}>
+            <label>Last Name</label>
+            <input value={form.lastName} onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))} required />
           </div>
           <div className={styles.field}>
             <label>Email</label>
